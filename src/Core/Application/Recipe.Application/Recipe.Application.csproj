@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Shared\Exceptions\Recipe.Exceptions\Recipe.Exceptions.csproj" />
+    <ProjectReference Include="..\..\..\Shared\Communication\Recipe.Communication\Recipe.Communication.csproj" />
+    <ProjectReference Include="..\..\Domain\Recipe.Domain\Recipe.Domain.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>
