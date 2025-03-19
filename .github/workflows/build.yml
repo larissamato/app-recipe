@@ -1,10 +1,12 @@
 name: SonarQube
+
 on:
   push:
     branches: [main, develop]
   pull_request:
     types: [opened, reopened, review_requested]
     branches: [main, develop]
+
 jobs:
   build:
     name: Build and analyze
@@ -36,10 +38,10 @@ jobs:
           restore-keys: ${{ runner.os }}-sonar-scanner
 
       - name: Install SonarQube Cloud scanner
+        if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
         shell: powershell
         run: |
-          New-Item -Path .\.sonar\scanner -ItemType Directory -Force
-          dotnet tool install dotnet-sonarscanner --tool-path .\.sonar\scanner
+          dotnet tool install --tool-path .\.sonar\scanner dotnet-sonarscanner
 
       - name: Build and analyze
         env:
@@ -47,8 +49,6 @@ jobs:
         shell: powershell
         run: |
           cd src
-
-          $scannerPath = Resolve-Path .\.sonar\scanner\dotnet-sonarscanner
-          & $scannerPath begin /k:"larissamato_app-recipe" /o:"larissamato" /d:sonar.token="$env:SONAR_TOKEN" /d:sonar.host.url="https://sonarcloud.io"
+          .\.sonar\scanner\dotnet-sonarscanner begin /k:"larissamato_app-recipe" /o:"larissamato" /d:sonar.token="$env:SONAR_TOKEN" /d:sonar.host.url="https://sonarcloud.io"
           dotnet build
-          & $scannerPath end /d:sonar.token="$env:SONAR_TOKEN"
+          .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.token="$env:SONAR_TOKEN"
