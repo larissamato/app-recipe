@@ -38,10 +38,22 @@ jobs:
           restore-keys: ${{ runner.os }}-sonar-scanner
 
       - name: Install SonarQube Cloud scanner
-        if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
         shell: powershell
         run: |
-          dotnet tool install --tool-path .\.sonar\scanner dotnet-sonarscanner
+          if (-Not (Test-Path ".\.sonar\scanner")) {
+            New-Item -Path .\.sonar\scanner -ItemType Directory -Force
+          }
+          dotnet tool update dotnet-sonarscanner --tool-path .\.sonar\scanner
+
+      - name: Check sonarScanner
+        shell: powershell
+        run: |
+          Write-Host "Verificando se dotnet-sonarscanner foi instalado..."
+          dotnet tool list --tool-path .\.sonar\scanner
+          if (-Not (Test-Path ".\.sonar\scanner\dotnet-sonarscanner.exe")) {
+            Write-Host "SonarScanner NÃO encontrado, falha na instalação!"
+            exit 1
+          }
 
       - name: Build and analyze
         env:
@@ -49,6 +61,7 @@ jobs:
         shell: powershell
         run: |
           cd src
-          .\.sonar\scanner\dotnet-sonarscanner begin /k:"larissamato_app-recipe" /o:"larissamato" /d:sonar.token="$env:SONAR_TOKEN" /d:sonar.host.url="https://sonarcloud.io"
+          $scannerPath = (Resolve-Path "..\.sonar\scanner\dotnet-sonarscanner.exe").Path
+          & $scannerPath begin /k:"larissamato_app-recipe" /o:"larissamato" /d:sonar.token="$env:SONAR_TOKEN" /d:sonar.host.url="https://sonarcloud.io"
           dotnet build
-          .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.token="$env:SONAR_TOKEN"
+          & $scannerPath end /d:sonar.token="$env:SONAR_TOKEN"
