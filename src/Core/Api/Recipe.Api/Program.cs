@@ -11,6 +11,7 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Minha API", Version = "v1" });
 });
 builder.Services.AddMvc(options => options.Filters.Add(typeof(ExceptionFilter)));
+
 var app = builder.Build();
 
 app.UseSwagger();
