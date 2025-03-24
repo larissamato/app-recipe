@@ -1,30 +1,38 @@
 using Recipe.Communication.Responses;
 using Recipe.Communication.Requests;
 using Recipe.Exceptions.ExceptionsBase;
-using Recipe.Application.Services.AutoMapper;
 using Recipe.Application.Services.Cryptography;
 using Recipe.Domain.Repositories.User;
+using AutoMapper;
 
 
 namespace Recipe.Application.UseCases.User.Register;
 
-public class RegisterUserUseCase
+public class RegisterUserUseCase : IRegisterUserUseCase
 {
     private readonly IUserWriteOnlyRepository _writeOnlyRepository;
     private readonly IUserReadOnlyRepository _readOnlyRepository;
+    private readonly IMapper _mapper;
+    private readonly PasswordEncripter _passwordEncripter;
+
+    public RegisterUserUseCase(
+        IUserWriteOnlyRepository writeOnlyRepository,
+        IUserReadOnlyRepository readOnlyRepository,
+        IMapper mapper,
+        PasswordEncripter passwordEncripter)
+    {
+        _writeOnlyRepository = writeOnlyRepository;
+        _readOnlyRepository = readOnlyRepository;
+        _mapper = mapper;
+        _passwordEncripter = passwordEncripter;
+    }
 
     public async Task<ResponseRegisteredUserJson> Execute(RequestRegisterUserJson request)
     {
-        var crip = new PasswordEncripter();
-        var autoMapper = new AutoMapper.MapperConfiguration(options =>
-        {
-            options.AddProfile(new AutoMapping());
-        }).CreateMapper();
-
         Validate(request);
 
-        var user = autoMapper.Map<Domain.Entities.User>(request);
-        user.Password = crip.Encrypt(request.Password);
+        var user = _mapper.Map<Domain.Entities.User>(request);
+        user.Password = _passwordEncripter.Encrypt(request.Password);
 
         await _writeOnlyRepository.Add(user);
 
