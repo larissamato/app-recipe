@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Recipe.Domain.Repositories.User;
+using Recipe.Domain.Repositories;
 using Recipe.Infrastructure.DataAccess.Repositories;
 using Recipe.Infrastructure.DataAccess;
 using Microsoft.EntityFrameworkCore;
@@ -16,7 +17,7 @@ public static class DependencyInjectionExtension
 
     private static void AddDbContext(IServiceCollection services)
     {
-        var connectionString = "Server=localhost,1433;Database=RecipeDB;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;";
+        var connectionString = "Server=localhost,1433;Database=Recipe;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;";
         services.AddDbContext<RecipeDbContext>(DbContextOptions =>
         {
             DbContextOptions.UseSqlServer(connectionString);
@@ -25,6 +26,7 @@ public static class DependencyInjectionExtension
 
     private static void AddRepositories(IServiceCollection services)
     {
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IUserReadOnlyRepository, UserRepository>();
         services.AddScoped<IUserWriteOnlyRepository, UserRepository>();
     }
