@@ -16,13 +16,11 @@ public static class DependencyInjectionExtension
 
     private static void AddDbContext(IServiceCollection services)
     {
-        var connectionString = "Server=localhost;Port=3306;Database=mydatabase;Uid=myuser;Pwd=mypassword";
-        var serverVersion = new MySqlServerVersion(new Version(8, 0, 41));
-        services.AddDbContext<RecipeDbContext>(dbContextOptions =>
+        var connectionString = "Server=localhost,1433;Database=RecipeDB;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;";
+        services.AddDbContext<RecipeDbContext>(DbContextOptions =>
         {
-            dbContextOptions.UseMySql(connectionString, serverVersion);
+            DbContextOptions.UseSqlServer(connectionString);
         });
-
     }
 
     private static void AddRepositories(IServiceCollection services)
