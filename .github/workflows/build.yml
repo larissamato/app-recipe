@@ -1,10 +1,12 @@
 name: SonarQube
+
 on:
   push:
-    branches:
-      - main
+    branches: [main, develop]
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened, reopened, review_requested]
+    branches: [main, develop]
+
 jobs:
   build:
     name: Build and analyze
@@ -14,16 +16,19 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: 17
-          distribution: 'zulu' # Alternative distribution options are available.
+          distribution: 'zulu'
+
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+          fetch-depth: 0
+
       - name: Cache SonarQube Cloud packages
         uses: actions/cache@v4
         with:
           path: ~\sonar\cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
+
       - name: Cache SonarQube Cloud scanner
         id: cache-sonar-scanner
         uses: actions/cache@v4
@@ -31,17 +36,32 @@ jobs:
           path: .\.sonar\scanner
           key: ${{ runner.os }}-sonar-scanner
           restore-keys: ${{ runner.os }}-sonar-scanner
+
       - name: Install SonarQube Cloud scanner
-        if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
         shell: powershell
         run: |
-          New-Item -Path .\.sonar\scanner -ItemType Directory
+          if (-Not (Test-Path ".\.sonar\scanner")) {
+            New-Item -Path .\.sonar\scanner -ItemType Directory -Force
+          }
           dotnet tool update dotnet-sonarscanner --tool-path .\.sonar\scanner
+
+      - name: Check sonarScanner
+        shell: powershell
+        run: |
+          Write-Host "Verificando se dotnet-sonarscanner foi instalado..."
+          dotnet tool list --tool-path .\.sonar\scanner
+          if (-Not (Test-Path ".\.sonar\scanner\dotnet-sonarscanner.exe")) {
+            Write-Host "SonarScanner NÃO encontrado, falha na instalação!"
+            exit 1
+          }
+
       - name: Build and analyze
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         shell: powershell
         run: |
-          .\.sonar\scanner\dotnet-sonarscanner begin /k:"larissamato_app-recipe" /o:"larissamato" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
+          cd src
+          $scannerPath = (Resolve-Path "..\.sonar\scanner\dotnet-sonarscanner.exe").Path
+          & $scannerPath begin /k:"larissamato_app-recipe" /o:"larissamato" /d:sonar.token="$env:SONAR_TOKEN" /d:sonar.host.url="https://sonarcloud.io"
           dotnet build
-          .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+          & $scannerPath end /d:sonar.token="$env:SONAR_TOKEN"
