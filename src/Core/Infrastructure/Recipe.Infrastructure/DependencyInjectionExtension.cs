@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Recipe.Domain.Repositories.User;
 using Recipe.Domain.Repositories;
@@ -9,18 +10,18 @@ namespace Recipe.Infrastructure;
 
 public static class DependencyInjectionExtension
 {
-    public static void AddInfrastructure(this IServiceCollection services)
+    public static void AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        AddDbContext(services);
+        AddDbContext(services, configuration);
         AddRepositories(services);
     }
 
-    private static void AddDbContext(IServiceCollection services)
+    private static void AddDbContext(IServiceCollection services, IConfiguration configuration)
     {
-        var connectionString = "Server=localhost,1433;Database=Recipe;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;";
+        var connection = configuration.GetConnectionString("Connection");
         services.AddDbContext<RecipeDbContext>(DbContextOptions =>
         {
-            DbContextOptions.UseSqlServer(connectionString);
+            DbContextOptions.UseSqlServer(connection);
         });
     }
 

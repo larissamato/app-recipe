@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Recipe.Application.UseCases.User.Register;
 using Recipe.Application.Services.AutoMapper;
@@ -7,10 +8,10 @@ namespace Recipe.Application;
 
 public static class DependencyInjectionExtension
 {
-    public static void AddApplication(this IServiceCollection services)
+    public static void AddApplication(this IServiceCollection services, IConfiguration configuration)
     {
         AddAutoMapper(services);
-        AddPasswordEncripter(services);
+        AddPasswordEncripter(services, configuration);
         AddUseCases(services);
     }
 
@@ -27,8 +28,9 @@ public static class DependencyInjectionExtension
         services.AddScoped<IRegisterUserUseCase, RegisterUserUseCase>();
     }
 
-    private static void AddPasswordEncripter(IServiceCollection services)
+    private static void AddPasswordEncripter(IServiceCollection services, IConfiguration configuration)
     {
-        services.AddScoped(option => new PasswordEncripter());
+        var additionalKey = configuration.GetValue<string>("Settings:Password:AdditionalKey");
+        services.AddScoped(option => new PasswordEncripter(additionalKey!));
     }
 }
